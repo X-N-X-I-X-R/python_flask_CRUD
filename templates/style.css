@@ -1,0 +1,92 @@
+    body.update-form-open {
+background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
+overflow: hidden; /* Prevent scrolling when the form is open */
+}
+
+.update-form {
+position: fixed;
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
+background-color: #fff;
+padding: 20px;
+border-radius: 8px;
+box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.update-form label {
+display: block;
+margin-bottom: 8px;
+}
+
+.update-form input {
+width: 100%;
+padding: 8px;
+margin-bottom: 12px;
+box-sizing: border-box;
+}
+
+.update-form button {
+background-color: #28a745;
+color: #fff;
+border: none;
+padding: 10px;
+cursor: pointer;
+}
+
+    body {
+        background-color: #f8d7da; /* Light red background color */
+        
+    }
+
+    h1 {
+        color: #007bff;
+    }
+
+    form {
+        max-width: 400px;
+        margin: 20px 0;
+    }
+
+    label {
+        margin-bottom: 5px;
+        display: block;
+    }
+
+    input,
+    select {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 10px;
+        box-sizing: border-box;
+    }
+
+    button {
+        padding: 10px;
+    }
+
+    #loanList {
+        margin-top: 20px;
+        
+        
+    }
+
+    .btn-update {
+background-color: #28a745;
+color: #fff;
+border: none;
+padding: 8px 12px;
+margin-top: 5px;
+cursor: pointer;
+}
+
+.btn-delete {
+background-color: #dc3545;
+color: #fff;
+border: none;
+padding: 8px 12px;
+margin-top: 5px;
+cursor: pointer;
+}
+
+

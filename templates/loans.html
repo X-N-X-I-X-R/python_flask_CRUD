@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Loan Page</title>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link href="style.css" rel="stylesheet">
 </head>
+
 <body>
     <h1>Loan Management</h1>
 
@@ -15,17 +19,18 @@
 
         <label for="bookId">Select Book:</label>
         <select id="bookId" required>
+            <option value="" disabled selected>Select a book</option>
         </select>
 
         <label for="customerId">Select Customer:</label>
         <select id="customerId" required>
+            <option value="" disabled selected>Select a customer</option>
         </select>
-
-        <button type="submit">Create Loan</button>
+        <button type="submit" class="btn btn-primary">Create Loan</button>
     </form>
 
     <div id="loanList"></div>
-
+    <div id="updateModal" class="modal-container"></div>
 
     <script>
         async function fetchLoans() {
@@ -49,90 +54,130 @@
                         <strong>Book ID:</strong> ${loan.bookID},
                         <strong>Customer ID:</strong> ${loan.customerID},
                         <strong>Return Date:</strong> ${loan.returnDate || 'N/A'}
-                        <button type="button" onclick="updateLoan(${loan.loanID})">Update</button>
-                        <button type="button" onclick="deleteLoan(${loan.loanID})">Delete</button>`;
+                        <button type="button" onclick="updateLoan(${loan.loanID})" class="btn btn-info btn-sm mt-1">Update</button>
+                        <button type="button" onclick="deleteLoan(${loan.loanID})" class="btn btn-danger btn-sm mt-1">Delete</button>
+                        <hr><div>`;
                     loanList.appendChild(loanDiv);
                 });
             } else {
                 console.error('Error: The fetched data does not contain an array of loans:', response);
-
             }
         }
+
         async function updateLoan(loanId) {
             // Fetch existing loan details (unchanged)
-            const existingLoanResponse = await axios.get(`http://127.0.0.1:5000/loans/${loanId}`);
-            const existingLoan = existingLoanResponse.data;
+            try {
+                const existingLoanResponse = await axios.get(`http://127.0.0.1:5000/loans/${loanId}`);
+                const existingLoan = existingLoanResponse.data;
 
-            if (!existingLoan) {
-                console.error(`No loan found with ID: ${loanId}`);
-                return;
-            }
-
-            // Create a form to gather updated values
-            const form = document.createElement('form');
-
-            const updatedLoanDateLabel = document.createElement('label');
-            updatedLoanDateLabel.textContent = 'Updated Loan Date:';
-            form.appendChild(updatedLoanDateLabel);
-
-            const updatedLoanDateInput = document.createElement('input');
-            updatedLoanDateInput.type = 'date';
-            updatedLoanDateInput.value = existingLoan.loanDate;
-            form.appendChild(updatedLoanDateInput);
-
-            const updatedBookIdLabel = document.createElement('label');
-            updatedBookIdLabel.textContent = 'Updated Book ID:';
-            form.appendChild(updatedBookIdLabel);
-
-            const updatedBookIdInput = document.createElement('input');
-            updatedBookIdInput.type = 'number';
-            updatedBookIdInput.value = existingLoan.bookID;
-            form.appendChild(updatedBookIdInput);
-
-            const updatedCustomerIdLabel = document.createElement('label');
-            updatedCustomerIdLabel.textContent = 'Updated Customer ID:';
-            form.appendChild(updatedCustomerIdLabel);
-
-            const updatedCustomerIdInput = document.createElement('input');
-            updatedCustomerIdInput.type = 'number';
-            updatedCustomerIdInput.value = existingLoan.customerID;
-            form.appendChild(updatedCustomerIdInput);
-
-            const updateButton = document.createElement('button');
-            updateButton.type = 'button';
-            updateButton.textContent = 'Update Loan';
-
-            updateButton.addEventListener('click', async () => {
-                const updatedLoanData = {
-                    loanDate: updatedLoanDateInput.value,
-                    bookID: updatedBookIdInput.value,
-                    customerID: updatedCustomerIdInput.value
-                };
-
-                try {
-                    // Update the loan with the new values
-                    const response = await axios.put(`http://127.0.0.1:5000/loans/${loanId}`, updatedLoanData);
-
-                    // Check if the update was successful before displaying the success message
-                    if (response.status === 200) {
-                        console.log('Loan updated successfully:', response.data);
-                        // Display the updated data in the UI
-                        renderLoans(response.data);
-                    } else {
-                        console.error('Error updating loan:', response.data);
-                    }
-                } catch (error) {
-                    console.error('Error updating loan:', error.response ? error.response.data : error.message);
+                if (!existingLoan) {
+                    console.error(`No loan found with ID: ${loanId}`);
+                    return;
                 }
 
-                // Remove the form after updating
-                form.remove();
-            });
+                document.body.classList.add('update-form-open');
 
-            form.appendChild(updateButton);
+                // Create a form to gather updated values
+                const form = document.createElement('form');
+                form.classList.add('update-form');
 
-            // Add the form to the document
-            document.body.appendChild(form);
+                const updatedLoanDateLabel = document.createElement('label');
+                updatedLoanDateLabel.textContent = '';
+                form.appendChild(updatedLoanDateLabel);
+
+                const updatedLoanDateInput = document.createElement('input');
+                updatedLoanDateInput.type = 'date';
+                updatedLoanDateInput.value = existingLoan.loanDate;
+                form.appendChild(updatedLoanDateInput);
+
+                const updatedBookIdLabel = document.createElement('label');
+                updatedBookIdLabel.textContent = '';
+                form.appendChild(updatedBookIdLabel);
+
+                const updatedBookIdInput = document.createElement('input');
+                updatedBookIdInput.type = 'number';
+                updatedBookIdInput.value = existingLoan.bookID;
+                form.appendChild(updatedBookIdInput);
+
+                const updatedCustomerIdLabel = document.createElement('label');
+                updatedCustomerIdLabel.textContent = '';
+                form.appendChild(updatedCustomerIdLabel);
+
+                const updatedCustomerIdInput = document.createElement('input');
+                updatedCustomerIdInput.type = 'number';
+                updatedCustomerIdInput.value = existingLoan.customerID;
+                form.appendChild(updatedCustomerIdInput);
+
+                const updateButton = document.createElement('button');
+                const cancelButton = document.createElement('button');
+                updateButton.type = 'button';
+                cancelButton.type = 'button';
+                updateButton.textContent = 'Update Loan';
+                cancelButton.textContent = 'Cancel';
+                cancelButton.classList.add('btn', 'btn-danger', 'btn-sm', 'mt-1', 'ms-1');
+                updateButton.classList.add('btn', 'btn-success', 'btn-sm', 'mt-1', 'ms-1');
+                cancelButton.addEventListener('click', function () {
+                    form.remove();
+                    document.body.classList.remove('update-form-open');
+                });
+                updateButton.addEventListener('click', async function (e) {
+                    e.preventDefault();
+
+                    // Get the updated values from the form
+                    const updatedLoanDate = updatedLoanDateInput.value;
+                    const updatedBookId = updatedBookIdInput.value;
+                    const updatedCustomerId = updatedCustomerIdInput.value;
+
+                    // Validate the date format (YYYY-MM-DD)
+                    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+                    if (!dateRegex.test(updatedLoanDate)) {
+                        alert('Invalid date format for loanDate. Please use the format YYYY-MM-DD');
+                        console.error('Invalid date format for loanDate. Please use the format YYYY-MM-DD');
+                        return;
+                    }
+
+                    // Create an object with the updated values
+                    const updatedLoanData = {
+                        loanDate: updatedLoanDate,
+                        bookID: parseInt(updatedBookId),
+                        customerID: parseInt(updatedCustomerId),
+                    };
+
+                    try {
+                        // Update the loan with the new values
+                        const response = await axios.put(`http://127.0.0.1:5000/loans/${loanId}`, updatedLoanData);
+
+                        // Check if the update was successful before displaying the success message
+                        if (response.status === 200) {
+                            console.log('Loan updated successfully:', response.data);
+                            // Fetch updated loans after successful update
+                            await fetchLoans();
+                        } else {
+                            console.error('Error updating loan:', response.data);
+                        }
+                    } catch (error) {
+                        console.error('Error updating loan:', error.response ? error.response.data : error.message);
+                    }
+
+                    // Remove the form after updating
+                    form.remove();
+                    document.body.classList.remove('update-form-open');
+                });
+
+                form.appendChild(updatedLoanDateLabel);
+                form.appendChild(updatedBookIdLabel);
+                form.appendChild(updatedCustomerIdLabel);
+                form.appendChild(updatedLoanDateInput);
+                form.appendChild(updatedBookIdInput);
+                form.appendChild(updatedCustomerIdInput);
+                form.appendChild(updateButton);
+                form.appendChild(cancelButton);
+
+                // Add the form to the document
+                document.body.appendChild(form);
+            } catch (error) {
+                console.error('Error fetching existing loan details:', error);
+            }
         }
 
         async function deleteLoan(loanId) {
@@ -150,6 +195,8 @@
 
         document.addEventListener('DOMContentLoaded', function () {
             fetchLoans();
+            fetchBooks(); // Call fetchBooks here
+            fetchCustomers(); // Call fetchCustomers here
         });
 
         document.getElementById('addLoanForm').addEventListener('submit', function (event) {
@@ -168,8 +215,8 @@
 
                 const loanResponse = await axios.post('http://127.0.0.1:5000/loans', {
                     loanDate: loanDate,
-                    bookID: bookId,
-                    customerID: customerId,
+                    bookID: parseInt(bookId), // Ensure it's parsed as an integer
+                    customerID: parseInt(customerId), // Ensure it's parsed as an integer
                     loanType: loanType
                 });
 
@@ -202,6 +249,13 @@
             const selectElement = document.getElementById(selectId);
             selectElement.innerHTML = '';
 
+            const placeholderOption = document.createElement('option');
+            placeholderOption.value = '';
+            placeholderOption.text = `Select a ${property.toLowerCase()}`;
+            placeholderOption.disabled = true;
+            placeholderOption.selected = true;
+            selectElement.add(placeholderOption);
+
             data.forEach(item => {
                 const option = document.createElement('option');
                 option.value = item.id;
@@ -213,5 +267,7 @@
         fetchBooks();
         fetchCustomers();
     </script>
+
 </body>
+
 </html>
