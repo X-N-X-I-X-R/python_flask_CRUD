@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Customer Page</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- Bootstrap CSS for styling -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+</head>
+<body class="container mt-5">
+    <h1>Customer List</h1>
+    <form id="addCustomerForm">
+        <div class="mb-3">
+            <input type="text" id="name" class="form-control" placeholder="Name" required>
+        </div>
+        <div class="mb-3">
+            <input type="text" id="email" class="form-control" placeholder="Email" required>
+        </div>
+        <div class="mb-3">
+            <input type="number" id="years_old" class="form-control" placeholder="Years Old" required>
+        </div>
+        <div class="mb-3 form-check">
+            <input type="checkbox" id="activated" class="form-check-input" checked>
+            <label for="activated" class="form-check-label">Activated</label>
+        </div>
+        <button type="submit" class="btn btn-primary">Add Customer</button>
+    </form>
+    <div id="customerList" class="mt-4"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-mQ93GR66B00ZXjt0YO5KlohRA5SY2XofZ6ebEY8JF9C/URqDShA6Q7gPQV91iSsp" crossorigin="anonymous"></script>
+    <script>
+        document.getElementById('addCustomerForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            addOrUpdateCustomer();
+        });
+
+        function addOrUpdateCustomer() {
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const yearsOld = document.getElementById('years_old').value;
+            const activated = document.getElementById('activated').checked;
+
+            // Check if the form has a data-customer-id attribute
+            const customerId = document.getElementById('addCustomerForm').getAttribute('data-customer-id');
+
+            if (customerId) {
+                // Update existing customer if customerId is present
+                updateCustomer(customerId, name, email, yearsOld, activated);
+            } else {
+                // Add new customer if no customerId is present
+                addCustomer(name, email, yearsOld, activated);
+            }
+        }
+
+        function addCustomer(name, email, yearsOld, activated) {
+            axios.post('http://127.0.0.1:5000/customers', {
+                name: name,
+                email: email,
+                years_old: yearsOld,
+                activated: activated
+            }).then(response => {
+                fetchCustomers();
+                alert('Customer added successfully!');
+                clearForm();
+            }).catch(error => {
+                console.error('Error adding customer:', error);
+                alert('Error adding customer. Please try again.');
+            });
+        }
+
+        function updateCustomer(customerId, name, email, yearsOld, activated) {
+            axios.put(`http://127.0.0.1:5000/customers/${customerId}`, {
+                name: name,
+                email: email,
+                years_old: yearsOld,
+                activated: activated
+            }).then(response => {
+                fetchCustomers();
+                alert('Customer updated successfully!');
+                clearForm();
+            }).catch(error => {
+                console.error('Error updating customer:', error);
+                alert('Error updating customer. Please try again.');
+            });
+        }
+
+        function fetchCustomers() {
+            axios.get('http://127.0.0.1:5000/customers').then(response => {
+                document.getElementById('customerList').innerHTML = response.data.map(customer =>
+                    `<div data-customer-id="${customer.id}">
+                        <div>Name: ${customer.name}, Email: ${customer.email}, Years Old: ${customer.years_old}, Activated: ${customer.activated ? 'Yes' : 'No'}</div>
+                        <button class="btn btn-info btn-sm mt-1" onclick="editCustomer(${customer.id},'${customer.name}','${customer.email}',${customer.years_old},${customer.activated})">Edit</button>
+                        <button class="btn btn-danger btn-sm mt-1" onclick="deleteCustomer(${customer.id})">Delete</button>
+                    </div>`
+                ).join('');
+            });
+        }
+
+        function editCustomer(id, name, email, yearsOld, activated) {
+            document.getElementById('name').value = name;
+            document.getElementById('email').value = email;
+            document.getElementById('years_old').value = yearsOld;
+            document.getElementById('activated').checked = activated;
+
+            // Set the data-customer-id attribute on the form for identification during update
+            document.getElementById('addCustomerForm').setAttribute('data-customer-id', id);
+        }
+
+        function deleteCustomer(id) {
+            axios.delete(`http://127.0.0.1:5000/customers/${id}`).then(response => {
+                fetchCustomers();
+                alert('Customer deleted successfully!');
+                clearForm();
+            }).catch(error => {
+                console.error('Error deleting customer:', error);
+                alert('Error deleting customer. Please try again.');
+            });
+        }
+
+        // Function to clear the form after submission
+        function clearForm() {
+            document.getElementById('name').value = '';
+            document.getElementById('email').value = '';
+            document.getElementById('years_old').value = '';
+            document.getElementById('activated').checked = true;
+
+            // Remove the data-customer-id attribute after form submission
+            document.getElementById('addCustomerForm').removeAttribute('data-customer-id');
+        }
+
+        fetchCustomers();
+    </script>
+</body>
+</html>

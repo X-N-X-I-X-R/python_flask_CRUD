@@ -1,0 +1,16 @@
+{
+  "activated": false,
+  "email": "ronii@i.com",
+  "id": 2,
+  "name": "roni",
+  "years_old": 18
+}
+
+
+{
+  "title": "Long Walk to Freedom",
+  "author": "Nelson Mandela",
+  "year": 1994,
+  "available": true,
+  "loan_type": 1
+}
