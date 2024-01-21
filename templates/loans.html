@@ -9,19 +9,16 @@
 <body>
     <h1>Loan Management</h1>
 
-    <!-- Form for adding a loan -->
     <form id="addLoanForm">
         <label for="loanDate">Loan Date:</label>
         <input type="date" id="loanDate" required>
 
         <label for="bookId">Select Book:</label>
         <select id="bookId" required>
-            <!-- Books will be dynamically populated here -->
         </select>
 
         <label for="customerId">Select Customer:</label>
         <select id="customerId" required>
-            <!-- Customers will be dynamically populated here -->
         </select>
 
         <button type="submit">Create Loan</button>
@@ -29,112 +26,192 @@
 
     <div id="loanList"></div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Fetch books and customers and render them on page load
-            fetchBooks();
-            fetchCustomers();
 
-            // Add event listener for the form submission
-            document.getElementById('addLoanForm').addEventListener('submit', function (event) {
-                event.preventDefault();
-                createLoan();
+    <script>
+        async function fetchLoans() {
+            try {
+                const response = await axios.get('http://127.0.0.1:5000/loans');
+                renderLoans(response.data);
+            } catch (error) {
+                console.error('Error fetching loans:', error);
+            }
+        }
+
+        function renderLoans(response) {
+            const loanList = document.getElementById('loanList');
+            loanList.innerHTML = '';
+
+            if (response && Array.isArray(response.loans)) {
+                response.loans.forEach(loan => {
+                    const loanDiv = document.createElement('div');
+                    loanDiv.innerHTML = `
+                        <strong>Loan Date:</strong> ${loan.loanDate},
+                        <strong>Book ID:</strong> ${loan.bookID},
+                        <strong>Customer ID:</strong> ${loan.customerID},
+                        <strong>Return Date:</strong> ${loan.returnDate || 'N/A'}
+                        <button type="button" onclick="updateLoan(${loan.loanID})">Update</button>
+                        <button type="button" onclick="deleteLoan(${loan.loanID})">Delete</button>`;
+                    loanList.appendChild(loanDiv);
+                });
+            } else {
+                console.error('Error: The fetched data does not contain an array of loans:', response);
+
+            }
+        }
+        async function updateLoan(loanId) {
+            // Fetch existing loan details (unchanged)
+            const existingLoanResponse = await axios.get(`http://127.0.0.1:5000/loans/${loanId}`);
+            const existingLoan = existingLoanResponse.data;
+
+            if (!existingLoan) {
+                console.error(`No loan found with ID: ${loanId}`);
+                return;
+            }
+
+            // Create a form to gather updated values
+            const form = document.createElement('form');
+
+            const updatedLoanDateLabel = document.createElement('label');
+            updatedLoanDateLabel.textContent = 'Updated Loan Date:';
+            form.appendChild(updatedLoanDateLabel);
+
+            const updatedLoanDateInput = document.createElement('input');
+            updatedLoanDateInput.type = 'date';
+            updatedLoanDateInput.value = existingLoan.loanDate;
+            form.appendChild(updatedLoanDateInput);
+
+            const updatedBookIdLabel = document.createElement('label');
+            updatedBookIdLabel.textContent = 'Updated Book ID:';
+            form.appendChild(updatedBookIdLabel);
+
+            const updatedBookIdInput = document.createElement('input');
+            updatedBookIdInput.type = 'number';
+            updatedBookIdInput.value = existingLoan.bookID;
+            form.appendChild(updatedBookIdInput);
+
+            const updatedCustomerIdLabel = document.createElement('label');
+            updatedCustomerIdLabel.textContent = 'Updated Customer ID:';
+            form.appendChild(updatedCustomerIdLabel);
+
+            const updatedCustomerIdInput = document.createElement('input');
+            updatedCustomerIdInput.type = 'number';
+            updatedCustomerIdInput.value = existingLoan.customerID;
+            form.appendChild(updatedCustomerIdInput);
+
+            const updateButton = document.createElement('button');
+            updateButton.type = 'button';
+            updateButton.textContent = 'Update Loan';
+
+            updateButton.addEventListener('click', async () => {
+                const updatedLoanData = {
+                    loanDate: updatedLoanDateInput.value,
+                    bookID: updatedBookIdInput.value,
+                    customerID: updatedCustomerIdInput.value
+                };
+
+                try {
+                    // Update the loan with the new values
+                    const response = await axios.put(`http://127.0.0.1:5000/loans/${loanId}`, updatedLoanData);
+
+                    // Check if the update was successful before displaying the success message
+                    if (response.status === 200) {
+                        console.log('Loan updated successfully:', response.data);
+                        // Display the updated data in the UI
+                        renderLoans(response.data);
+                    } else {
+                        console.error('Error updating loan:', response.data);
+                    }
+                } catch (error) {
+                    console.error('Error updating loan:', error.response ? error.response.data : error.message);
+                }
+
+                // Remove the form after updating
+                form.remove();
             });
 
-            async function fetchBooks() {
-    try {
-        const response = await axios.get('http://127.0.0.1:5000/books');
-        console.log('Books Response:', response.data); // Log the response
-        renderDropdownOptions('bookId', response.data, 'title');
-    } catch (error) {
-        console.error('Error fetching books:', error);
-    }
-}
+            form.appendChild(updateButton);
 
-// Function to fetch customers from the Flask API
-async function fetchCustomers() {
-    try {
-        const response = await axios.get('http://127.0.0.1:5000/customers');
-        console.log('Customers Response:', response.data); // Log the response
-        renderDropdownOptions('customerId', response.data, 'name');
-    } catch (error) {
-        console.error('Error fetching customers:', error);
-    }
-}
+            // Add the form to the document
+            document.body.appendChild(form);
+        }
 
-
-
-function renderDropdownOptions(selectId, data, property) {
-    const selectElement = document.getElementById(selectId);
-    selectElement.innerHTML = '';
-
-    data.forEach(item => {
-        const option = document.createElement('option');
-        option.value = item.id;  // Use item.id directly
-        option.text = item[property];
-        selectElement.add(option);
-    });
-}
-
-
-
-            // Function to create a loan
-            async function createLoan() {
-                const loanDate = document.getElementById('loanDate').value;
-                const bookId = document.getElementById('bookId').value;
-                const customerId = document.getElementById('customerId').value;
-
-                try {
-                    // Fetch the selected book to get loan_type
-                    const bookResponse = await axios.get(`http://127.0.0.1:5000/books/${bookId}`);
-                    const loanType = bookResponse.data.loan_type;
-
-                    // Create a loan with the loan_type information
-                    const loanResponse = await axios.post('http://127.0.0.1:5000/loans', {
-                        loanDate: loanDate,
-                        bookID: bookId,
-                        customerID: customerId,
-                        loanType: loanType
-                    });
-
-                    // Loan created successfully, update the UI
+        async function deleteLoan(loanId) {
+            try {
+                const confirmDelete = confirm('Are you sure you want to delete this loan?');
+                if (confirmDelete) {
+                    const response = await axios.delete(`http://127.0.0.1:5000/loans/${loanId}`);
+                    console.log('Loan deleted successfully:', response.data);
                     await fetchLoans();
-                    console.log('Loan created successfully!');
-                } catch (error) {
-                    console.error('Error creating loan:', error);
                 }
+            } catch (error) {
+                console.error('Error deleting loan:', error);
             }
+        }
 
-            // Function to fetch loans and render them on the page
-            async function fetchLoans() {
-                try {
-                    const response = await axios.get('http://127.0.0.1:5000/loans');
-                    renderLoans(response.data);
-                } catch (error) {
-                    console.error('Error fetching loans:', error);
-                }
-            }
-
-            // Function to render loans on the page
-            function renderLoans(response) {
-                const loanList = document.getElementById('loanList');
-                loanList.innerHTML = ''; // Clear previous content
-
-                // Ensure that the response data has a 'loans' property and it is an array
-                if (response && Array.isArray(response.loans)) {
-                    response.loans.forEach(loan => {
-                        const loanDiv = document.createElement('div');
-                        loanDiv.innerHTML = `<strong>Loan Date:</strong> ${loan.loanDate}, <strong>Book ID:</strong> ${loan.bookID}, <strong>Customer ID:</strong> ${loan.customerID}, <strong>Return Date:</strong> ${loan.returnDate}`;
-                        loanList.appendChild(loanDiv);
-                    });
-                } else {
-                    console.error('Error: The fetched data does not contain an array of loans:', response);
-                }
-            }
-
-            // Fetch loans and render them on page load
+        document.addEventListener('DOMContentLoaded', function () {
             fetchLoans();
         });
+
+        document.getElementById('addLoanForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            createLoan();
+        });
+
+        async function createLoan() {
+            const loanDate = document.getElementById('loanDate').value;
+            const bookId = document.getElementById('bookId').value;
+            const customerId = document.getElementById('customerId').value;
+
+            try {
+                const bookResponse = await axios.get(`http://127.0.0.1:5000/books/${bookId}`);
+                const loanType = bookResponse.data.loan_type;
+
+                const loanResponse = await axios.post('http://127.0.0.1:5000/loans', {
+                    loanDate: loanDate,
+                    bookID: bookId,
+                    customerID: customerId,
+                    loanType: loanType
+                });
+
+                await fetchLoans();
+                console.log('Loan created successfully!');
+            } catch (error) {
+                console.error('Error creating loan:', error);
+            }
+        }
+
+        async function fetchBooks() {
+            try {
+                const response = await axios.get('http://127.0.0.1:5000/books');
+                renderDropdownOptions('bookId', response.data, 'title');
+            } catch (error) {
+                console.error('Error fetching books:', error);
+            }
+        }
+
+        async function fetchCustomers() {
+            try {
+                const response = await axios.get('http://127.0.0.1:5000/customers');
+                renderDropdownOptions('customerId', response.data, 'name');
+            } catch (error) {
+                console.error('Error fetching customers:', error);
+            }
+        }
+
+        function renderDropdownOptions(selectId, data, property) {
+            const selectElement = document.getElementById(selectId);
+            selectElement.innerHTML = '';
+
+            data.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.text = item[property];
+                selectElement.add(option);
+            });
+        }
+
+        fetchBooks();
+        fetchCustomers();
     </script>
 </body>
 </html>

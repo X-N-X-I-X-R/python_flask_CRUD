@@ -3,10 +3,11 @@ from flask import jsonify, request
 from flask import Blueprint
 from models.customer_m import Customer
 from data_b import db
-from datetime import datetime
+from datetime import datetime, timedelta
 from models.book_m import Book
 from models.loan_m import Loan
-from sqlalchemy import func
+from datetime import datetime
+
 
 
 loans_routes = Blueprint('loans_routes', __name__)
@@ -72,59 +73,68 @@ def get_loans():
 
     return jsonify({'loans': loan_list})
 
-# Route to end a loan by book title
-@loans_routes.route('/loans', methods=['DELETE'])
-def end_loan():
+# Route to delete a loan by book id 
+@loans_routes.route('/loans/<int:loan_id>', methods=['DELETE'])
+def delete_loan(loan_id):
+    loan = Loan.query.get(loan_id)
+    if loan:
+        # Update the book status to "available"
+        book = Book.query.get(loan.bookID)
+        book.status = 'available'
 
-    book_title = request.args.get('q')
-    if book_title:
-
-        # Check if there is a book with a title that matches (case-insensitive)
-        book = Book.query.filter(func.lower(Book.title) == func.lower(book_title)).first()
-
-        if book:
-            # Check if there is a loan for this book
-            loan = Loan.query.filter_by(bookID=book.bookID).first()
-
-            if loan:
-                
-                book.status = 'available'
-                db.session.delete(loan)
-                db.session.commit()
-
-                return jsonify({'message': 'Loan ended successfully'})
-            else:
-                return jsonify({'error': 'No loan found for this book'}, 400)
-        else:
-            return jsonify({'error': 'Book not found'}, 404)
+        db.session.delete(loan)
+        db.session.commit()
+        return '', 204
     else:
-        return jsonify({'error': 'search quary is missing (parameter: q)'})
+        return jsonify({'error': 'Loan not found'}, 404)
+    
 
-# Route to retrieve all late loans
-@loans_routes.route('/loans/late', methods=['GET'])
-def get_late_loans():
-    current_date = datetime.now().date()
-
-    late_loans = Loan.query.filter(Loan.returnDate < current_date).all()
-
-    late_loan_list = [{'loanID': loan.loanID, 'loanDate': loan.loanDate, 'returnDate': loan.returnDate, 'bookID': loan.bookID, 'customerID': loan.customerID} for loan in late_loans]
-
-    return jsonify({'late_loans': late_loan_list})
+# Route to retrieve all loans by id 
+@loans_routes.route('/loans/<int:loan_id>', methods=['GET'])
+def get_loan_id(loan_id):
+    loan = Loan.query.get(loan_id)
+    if loan:
+        return jsonify({'loanID': loan.loanID, 'loanDate': loan.loanDate, 'returnDate': loan.returnDate, 'bookID': loan.bookID, 'customerID': loan.customerID})
+    else:
+        return jsonify({'error': 'Loan not found'}, 404)
 
 
+
+## Route to update a loan by loan id
 @loans_routes.route('/loans/<int:loan_id>', methods=['PUT'])
 def update_loan(loan_id):
-    try:
-        loan = Loan.query.get(loan_id)
-        if loan:
-            data = request.get_json()
-            # Update the loan attributes based on the data received
-            loan.loanDate = datetime.strptime(data['loanDate'], '%Y-%m-%d').date()
-            # Update other attributes as needed
+    # Get the loan from the database
+    loan = Loan.query.get(loan_id)
 
-            db.session.commit()
-            return jsonify({'message': 'Loan updated successfully'})
-        else:
-            return jsonify({'error': 'Loan not found'}, 404)
-    except Exception as e:
-        return jsonify({'error': f'Error updating loan: {str(e)}'}), 500
+    # Check if the loan exists
+    if loan:
+        # Parse the data from the request
+        data = request.get_json()
+
+        # Update all fields if they are present in the request data
+        for field in ['loanDate', 'bookID', 'customerID', 'returnDate']:
+            if field in data:
+                # Convert loanDate to a Python date object before updating
+                if field == 'loanDate':
+                    loanDate_str = data['loanDate']
+                    try:
+                        loanDate = datetime.strptime(loanDate_str, '%Y-%m-%d').date()
+                    except ValueError:
+                        return jsonify({'error': 'Invalid date format for loanDate. Please use the format YYYY-MM-DD'}), 400
+                    setattr(loan, field, loanDate)
+                elif field == 'returnDate':
+                    returnDate_str = data['returnDate']
+                    try:
+                        returnDate = datetime.strptime(returnDate_str, '%Y-%m-%d').date()
+                    except ValueError:
+                        return jsonify({'error': 'Invalid date format for returnDate. Please use the format YYYY-MM-DD'}), 400
+                    setattr(loan, field, returnDate)
+                else:
+                    setattr(loan, field, data[field])
+
+        # Commit the changes to the database
+        db.session.commit()
+
+        return jsonify({'message': 'Loan updated successfully!'})
+    else:
+        return jsonify({'error': 'Loan not found'}, 404)
