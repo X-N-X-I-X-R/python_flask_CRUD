@@ -55,12 +55,26 @@
                         <strong>Customer ID:</strong> ${loan.customerID},
                         <strong>Return Date:</strong> ${loan.returnDate || 'N/A'}
                         <button type="button" onclick="updateLoan(${loan.loanID})" class="btn btn-info btn-sm mt-1">Update</button>
+                        <button type="button" onclick="returnBook(${loan.loanID})" class="btn btn-success btn-sm mt-1">Return</button>
                         <button type="button" onclick="deleteLoan(${loan.loanID})" class="btn btn-danger btn-sm mt-1">Delete</button>
                         <hr><div>`;
                     loanList.appendChild(loanDiv);
                 });
             } else {
                 console.error('Error: The fetched data does not contain an array of loans:', response);
+            }
+        }
+
+        async function returnBook(loanId) {
+            try {
+                const confirmReturn = confirm('Are you sure you want to return this book?');
+                if (confirmReturn) {
+                    const response = await axios.put(`http://127.0.0.1:5000/loans/return/${loanId}`);
+                    console.log('Book returned successfully:', response.data);
+                    await fetchLoans();
+                }
+            } catch (error) {
+                console.error('Error returning book:', error);
             }
         }
 

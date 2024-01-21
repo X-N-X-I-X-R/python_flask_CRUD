@@ -46,9 +46,45 @@
     </form>
 
     <div id="bookList"></div>
+    <div class="modal fade" id="updateBookModal" tabindex="-1" role="dialog" aria-labelledby="updateBookModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="updateBookModalLabel">Update Book</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- Update book form content -->
+                    <label for="updateTitle">Title:</label>
+                    <input type="text" id="updateTitle" class="form-control" required>
+                    <label for="updateAuthor">Author:</label>
+                    <input type="text" id="updateAuthor" class="form-control" required>
+                    <label for="updateYear">Year:</label>
+                    <input type="number" id="updateYear" class="form-control" required>
+                    <div class="form-check">
+                        <input type="checkbox" id="updateAvailable" class="form-check-input">
+                        <label for="updateAvailable" class="form-check-label">Available</label>
+                    </div>
+                    <label for="updateLoanType">Loan Type:</label>
+                    <select id="updateLoanType" class="form-select" required>
+                        <option value="10">10 days</option>
+                        <option value="20">20 days</option>
+                        <option value="30">30 days</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="updateBook()">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+           document.addEventListener('DOMContentLoaded', function () {
             // Fetch books and render them on page load
             fetchBooks();
 
@@ -75,10 +111,11 @@
 
                 books.forEach(book => {
                     const bookDiv = document.createElement('div');
-                    bookDiv.innerHTML = `<strong>${book.title}</strong> by ${book.author}, Year: ${book.year}, Available: ${book.available}, Loan Type: ${book.loan_type}
-                        <button class="btn btn-info btn-sm mt-1" data-book-id="${book.id}">Edit</button> -
-                        <button class="btn btn-danger btn-sm mt-1" data-book-id="${book.id}">Delete</button>
-                    </div>      <hr>`;
+                    bookDiv.innerHTML = `
+                        <strong>${book.title}</strong> by ${book.author}, Year: ${book.year}, Available: ${book.available}, Loan Type: ${book.loan_type}
+                        <button class="btn btn-info btn-sm mt-1 edit-button" data-book-id="${book.id}">Edit</button> -
+                        <button class="btn btn-danger btn-sm mt-1 delete-button" data-book-id="${book.id}">Delete</button>
+                        <hr>`;
                     bookList.appendChild(bookDiv);
                 });
 
