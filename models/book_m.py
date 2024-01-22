@@ -31,6 +31,3 @@ class Book(db.Model):
             "available": self.available,
             "loan_type": self.loan_type
         }
-
-
-

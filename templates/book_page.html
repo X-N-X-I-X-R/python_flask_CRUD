@@ -104,20 +104,20 @@
                 }
             }
 
-            // Function to render books on the page
             function renderBooks(books) {
-                const bookList = document.getElementById('bookList');
-                bookList.innerHTML = ''; // Clear previous content
+            const bookList = document.getElementById('bookList');
+            bookList.innerHTML = ''; // Clear previous content
 
-                books.forEach(book => {
-                    const bookDiv = document.createElement('div');
-                    bookDiv.innerHTML = `
-                        <strong>${book.title}</strong> by ${book.author}, Year: ${book.year}, Available: ${book.available}, Loan Type: ${book.loan_type}
-                        <button class="btn btn-info btn-sm mt-1 edit-button" data-book-id="${book.id}">Edit</button> -
-                        <button class="btn btn-danger btn-sm mt-1 delete-button" data-book-id="${book.id}">Delete</button>
-                        <hr>`;
-                    bookList.appendChild(bookDiv);
-                });
+            books.forEach(book => {
+                const bookDiv = document.createElement('div');
+                const status = book.available ? 'Available' : 'Unavailable';
+                bookDiv.innerHTML = `
+                    <strong>${book.title}</strong> by ${book.author}, Year: ${book.year}, Status: ${book.status}, Loan Type: ${book.loan_type}
+                    <button class="btn btn-info btn-sm mt-1 edit-button" data-book-id="${book.id}">Edit</button> -
+                    <button class="btn btn-danger btn-sm mt-1 delete-button" data-book-id="${book.id}">Delete</button>
+                    <hr>`;
+                bookList.appendChild(bookDiv);
+            });
 
                 // Add event listeners for edit and delete buttons
                 document.querySelectorAll('.edit-button').forEach(button => {

@@ -1,17 +1,15 @@
 
-from flask import jsonify, request
-from flask import Blueprint
+from flask import Blueprint, jsonify, request
+from flask_cors import CORS
 from models.customer_m import Customer
 from data_b import db
-from datetime import datetime, timedelta
 from models.book_m import Book
 from models.loan_m import Loan
 from datetime import datetime
 
-
-
 loans_routes = Blueprint('loans_routes', __name__)
 
+CORS(loans_routes, resources={r"/loans/*": {"origins": "*"}})
 
 
 
@@ -97,8 +95,32 @@ def get_loan_id(loan_id):
         return jsonify({'loanID': loan.loanID, 'loanDate': loan.loanDate, 'returnDate': loan.returnDate, 'bookID': loan.bookID, 'customerID': loan.customerID})
     else:
         return jsonify({'error': 'Loan not found'}, 404)
+@loans_routes.route('/loans/return/<int:loan_id>', methods=['PUT'])
+def return_book(loan_id):
+    # Get the loan from the database
+    loan = Loan.query.get(loan_id)
 
+    # Check if the loan exists
+    if loan:
+        # Check if the book associated with the loan exists
+        book = Book.query.get(loan.bookID)
 
+        # Check if the book is not already available
+        if book and book.status != 'available':
+            # Update the book status to "available"
+            book.status = 'available'
+
+            # Set the return date for the loan
+            loan.returnDate = datetime.now().date()
+
+            # Commit the changes to the database
+            db.session.commit()
+
+            return jsonify({'message': 'Book returned successfully!'})
+        else:
+            return jsonify({'error': 'Book is already available or not found'}, 400)
+    else:
+        return jsonify({'error': 'Loan not found'}, 404)
 
 ## Route to update a loan by loan id
 @loans_routes.route('/loans/<int:loan_id>', methods=['PUT'])
@@ -138,3 +160,7 @@ def update_loan(loan_id):
         return jsonify({'message': 'Loan updated successfully!'})
     else:
         return jsonify({'error': 'Loan not found'}, 404)
+    
+    
+    
+    

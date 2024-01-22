@@ -14,18 +14,25 @@
     <h1>Loan Management</h1>
 
     <form id="addLoanForm">
-        <label for="loanDate">Loan Date:</label>
-        <input type="date" id="loanDate" required>
+        <div>
+            <label for="loanDate">Loan Date:</label>
+            <input type="date" id="loanDate" required>
+        </div>
 
-        <label for="bookId">Select Book:</label>
-        <select id="bookId" required>
-            <option value="" disabled selected>Select a book</option>
-        </select>
+        <div>
+            <label for="bookId">Select Book:</label>
+            <select id="bookId" required>
+                <option value="" disabled selected>Select a book</option>
+            </select>
+        </div>
 
-        <label for="customerId">Select Customer:</label>
-        <select id="customerId" required>
-            <option value="" disabled selected>Select a customer</option>
-        </select>
+        <div>
+            <label for="customerId">Select Customer:</label>
+            <select id="customerId" required>
+                <option value="" disabled selected>Select a customer</option>
+            </select>
+        </div>
+
         <button type="submit" class="btn btn-primary">Create Loan</button>
     </form>
 
@@ -33,6 +40,17 @@
     <div id="updateModal" class="modal-container"></div>
 
     <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            fetchLoans();
+            fetchBooks();
+            fetchCustomers();
+        });
+
+        document.getElementById('addLoanForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            createLoan();
+        });
+
         async function fetchLoans() {
             try {
                 const response = await axios.get('http://127.0.0.1:5000/loans');
@@ -42,7 +60,7 @@
             }
         }
 
-        function renderLoans(response) {
+        async function renderLoans(response) {
             const loanList = document.getElementById('loanList');
             loanList.innerHTML = '';
 
@@ -58,6 +76,7 @@
                         <button type="button" onclick="returnBook(${loan.loanID})" class="btn btn-success btn-sm mt-1">Return</button>
                         <button type="button" onclick="deleteLoan(${loan.loanID})" class="btn btn-danger btn-sm mt-1">Delete</button>
                         <hr><div>`;
+
                     loanList.appendChild(loanDiv);
                 });
             } else {
@@ -69,17 +88,31 @@
             try {
                 const confirmReturn = confirm('Are you sure you want to return this book?');
                 if (confirmReturn) {
-                    const response = await axios.put(`http://127.0.0.1:5000/loans/return/${loanId}`);
-                    console.log('Book returned successfully:', response.data);
-                    await fetchLoans();
+                    try {
+                        const response = await axios.put(`http://127.0.0.1:5000/loans/return/${loanId}`, {}, {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                // Avoid using wildcard (*) in production
+                                'Access-Control-Allow-Origin': '*',
+                            },
+                        });
+
+                        if (response.status === 200) {
+                            console.log('Book returned successfully:', response.data);
+                            await fetchLoans();
+                        } else {
+                            console.error('Error returning book:', response.data);
+                        }
+                    } catch (error) {
+                        console.error('Error returning book:', error.response ? error.response.data : error.message);
+                    }
                 }
             } catch (error) {
-                console.error('Error returning book:', error);
+                console.error('Error confirming return:', error);
             }
         }
 
         async function updateLoan(loanId) {
-            // Fetch existing loan details (unchanged)
             try {
                 const existingLoanResponse = await axios.get(`http://127.0.0.1:5000/loans/${loanId}`);
                 const existingLoan = existingLoanResponse.data;
@@ -91,12 +124,11 @@
 
                 document.body.classList.add('update-form-open');
 
-                // Create a form to gather updated values
                 const form = document.createElement('form');
                 form.classList.add('update-form');
 
                 const updatedLoanDateLabel = document.createElement('label');
-                updatedLoanDateLabel.textContent = '';
+                updatedLoanDateLabel.textContent = 'Updated Loan Date:';
                 form.appendChild(updatedLoanDateLabel);
 
                 const updatedLoanDateInput = document.createElement('input');
@@ -105,7 +137,7 @@
                 form.appendChild(updatedLoanDateInput);
 
                 const updatedBookIdLabel = document.createElement('label');
-                updatedBookIdLabel.textContent = '';
+                updatedBookIdLabel.textContent = 'Updated Book ID:';
                 form.appendChild(updatedBookIdLabel);
 
                 const updatedBookIdInput = document.createElement('input');
@@ -114,7 +146,7 @@
                 form.appendChild(updatedBookIdInput);
 
                 const updatedCustomerIdLabel = document.createElement('label');
-                updatedCustomerIdLabel.textContent = '';
+                updatedCustomerIdLabel.textContent = 'Updated Customer ID:';
                 form.appendChild(updatedCustomerIdLabel);
 
                 const updatedCustomerIdInput = document.createElement('input');
@@ -137,12 +169,10 @@
                 updateButton.addEventListener('click', async function (e) {
                     e.preventDefault();
 
-                    // Get the updated values from the form
                     const updatedLoanDate = updatedLoanDateInput.value;
                     const updatedBookId = updatedBookIdInput.value;
                     const updatedCustomerId = updatedCustomerIdInput.value;
 
-                    // Validate the date format (YYYY-MM-DD)
                     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
                     if (!dateRegex.test(updatedLoanDate)) {
                         alert('Invalid date format for loanDate. Please use the format YYYY-MM-DD');
@@ -150,7 +180,6 @@
                         return;
                     }
 
-                    // Create an object with the updated values
                     const updatedLoanData = {
                         loanDate: updatedLoanDate,
                         bookID: parseInt(updatedBookId),
@@ -158,13 +187,10 @@
                     };
 
                     try {
-                        // Update the loan with the new values
                         const response = await axios.put(`http://127.0.0.1:5000/loans/${loanId}`, updatedLoanData);
 
-                        // Check if the update was successful before displaying the success message
                         if (response.status === 200) {
                             console.log('Loan updated successfully:', response.data);
-                            // Fetch updated loans after successful update
                             await fetchLoans();
                         } else {
                             console.error('Error updating loan:', response.data);
@@ -173,7 +199,6 @@
                         console.error('Error updating loan:', error.response ? error.response.data : error.message);
                     }
 
-                    // Remove the form after updating
                     form.remove();
                     document.body.classList.remove('update-form-open');
                 });
@@ -187,7 +212,6 @@
                 form.appendChild(updateButton);
                 form.appendChild(cancelButton);
 
-                // Add the form to the document
                 document.body.appendChild(form);
             } catch (error) {
                 console.error('Error fetching existing loan details:', error);
@@ -207,17 +231,6 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', function () {
-            fetchLoans();
-            fetchBooks(); // Call fetchBooks here
-            fetchCustomers(); // Call fetchCustomers here
-        });
-
-        document.getElementById('addLoanForm').addEventListener('submit', function (event) {
-            event.preventDefault();
-            createLoan();
-        });
-
         async function createLoan() {
             const loanDate = document.getElementById('loanDate').value;
             const bookId = document.getElementById('bookId').value;
@@ -229,9 +242,9 @@
 
                 const loanResponse = await axios.post('http://127.0.0.1:5000/loans', {
                     loanDate: loanDate,
-                    bookID: parseInt(bookId), // Ensure it's parsed as an integer
-                    customerID: parseInt(customerId), // Ensure it's parsed as an integer
-                    loanType: loanType
+                    bookID: parseInt(bookId),
+                    customerID: parseInt(customerId),
+                    loanType: loanType,
                 });
 
                 await fetchLoans();
