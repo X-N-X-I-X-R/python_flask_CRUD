@@ -4,6 +4,7 @@ from flask import Blueprint
 from models.customer_m import Customer
 from data_b import db
 
+
 customers_route = Blueprint('customers_route', __name__)
 
 @customers_route.route('/customers', methods=['GET'])

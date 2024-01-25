@@ -11,7 +11,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data_base.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
-CORS(app, origins="http://127.0.0.1:5500")
+CORS(app)
 migrate = Migrate(app, db)
 
 with app.app_context():

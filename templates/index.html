@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-mQ93GR66B00ZXjt0YO5KlohRA5SY2XofZ6ebEY8JF9C/URqDShA6Q7gPQV91iSsp" crossorigin="anonymous"></script>
+    <title>Library Homepage</title>
+    <style>
+        #iframeContainer {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .card {
+            margin: 0;
+            padding: 0;
+            border: 0;
+        }
+
+        .card-body {
+            padding: 0;
+
+
+    
+        }
+
+       
+
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="index.html">Library</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" href="#" onclick="loadPage('/templates/book_page.html')">Books</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" onclick="loadPage('/templates/customer.html')">Customers</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" onclick="loadPage('/templates/loans.html')">Loans</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+</nav>
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Library Homepage</h5>
+        <div id="iframeContainer"></div>
+    </div>
+</div>
+
+<script>
+  function loadPage(pageUrl) {
+      // Clear previous iframe content
+      document.getElementById("iframeContainer").innerHTML = "";
+
+      // Create and append the iframe
+      var iframe = document.createElement("iframe");
+      iframe.src = pageUrl;
+      iframe.width = "100%";
+      iframe.height = "100%";
+      iframe.frameBorder = "0";
+
+      document.getElementById("iframeContainer").appendChild(iframe);
+  }
+</script>
+
+</body>
+</html>

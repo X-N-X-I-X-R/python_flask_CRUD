@@ -22,6 +22,9 @@ def create_book():
 def get_book_id(book_id):
     book = Book.query.get_or_404(book_id)
     return jsonify(book.to_dict())
+    
+
+
 
 @books_routes.route('/books/<int:book_id>', methods=['PUT'])
 def update_book(book_id):
@@ -41,3 +44,4 @@ def delete_book(book_id):
     db.session.delete(book)
     db.session.commit()
     return '', 204
+
